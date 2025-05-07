@@ -67,13 +67,7 @@ const seedActivities = async (req, res) => {
       location: "CrossFit Zone",
       date: new Date("2025-06-08T19:00:00")
     },
-    {
-        title: "Trekking Adventure",
-        description: "A thrilling trek through the mountains.",
-        location: "Mount Everest Trail",
-        date: new Date("2025-06-09T07:00:00")
-        
-      }
+   
   ];
 
   try {

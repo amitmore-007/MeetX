@@ -132,6 +132,8 @@ export default function Dashboard() {
 
   // Extract date and time components
   const getDateParts = (dateString) => {
+    if (!dateString) return { day: '--', month: '--', time: '--:--' };
+    
     const date = new Date(dateString);
     return {
       day: date.getDate(),
@@ -287,7 +289,7 @@ export default function Dashboard() {
                     const dateParts = getDateParts(activity.date);
                     return (
                       <motion.div
-                        key={activity._id}
+                        key={activity._id || index}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
@@ -355,45 +357,51 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {bookings.map((booking, index) => (
-                    <motion.div
-                      key={booking._id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
-                    >
-                      <div className="flex flex-col md:flex-row md:items-center">
-                        <div className="bg-gradient-to-r from-green-500 to-teal-600 p-4 text-white md:w-32 md:h-32 flex flex-col items-center justify-center">
-                          <span className="text-2xl font-bold">{getDateParts(booking.activity.date).day}</span>
-                          <span className="text-sm uppercase">{getDateParts(booking.activity.date).month}</span>
-                          <span className="text-xs mt-2">{getDateParts(booking.activity.date).time}</span>
+                  {bookings.map((booking, index) => {
+                    // Check if booking.activity exists before accessing its properties
+                    if (!booking || !booking.activity) {
+                      return null; // Skip rendering this booking
+                    }
+                    
+                    return (
+                      <motion.div
+                        key={booking._id || index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+                      >
+                        <div className="flex flex-col md:flex-row md:items-center">
+                          <div className="bg-gradient-to-r from-green-500 to-teal-600 p-4 text-white md:w-32 md:h-32 flex flex-col items-center justify-center">
+                            <span className="text-2xl font-bold">{getDateParts(booking.activity.date).day}</span>
+                            <span className="text-sm uppercase">{getDateParts(booking.activity.date).month}</span>
+                            <span className="text-xs mt-2">{getDateParts(booking.activity.date).time}</span>
+                          </div>
+                          <div className="p-5 flex-grow">
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">{booking.activity.title}</h3>
+                            <p className="text-gray-600">{booking.activity.description}</p>
+                            {booking.activity.location && (
+                              <div className="flex items-center space-x-2 text-gray-600">
+                                <MapPin size={16} className="text-green-500" />
+                                <span>{booking.activity.location}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-5 flex justify-end">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => cancelBooking(booking._id)}
+                              className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-all duration-300 flex items-center space-x-2"
+                            >
+                              <X size={18} />
+                              <span>Cancel</span>
+                            </motion.button>
+                          </div>
                         </div>
-                        <div className="p-5 flex-grow">
-                          <h3 className="text-xl font-bold text-gray-800 mb-2">{booking.activity.title}</h3>
-                          <p className="text-gray-600">{booking.activity.description}</p>
-                          {booking.activity.location && (
-                            <div className="flex items-center space-x-2 text-gray-600">
-                              <MapPin size={16} className="text-green-500" />
-                              <span>{booking.activity.location}</span>
-                            </div>
-                          )}
-                        
-                        </div>
-                        <div className="p-5 flex justify-end">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => cancelBooking(booking._id)}
-                            className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-all duration-300 flex items-center space-x-2"
-                          >
-                            <X size={18} />
-                            <span>Cancel</span>
-                          </motion.button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )}
             </motion.div>
