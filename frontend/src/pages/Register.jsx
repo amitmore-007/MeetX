@@ -2,11 +2,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ArrowRight, Eye, EyeOff, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, AlertCircle, CheckCircle, X, Phone } from 'lucide-react';
 import API from '../api';
 
 const Register = () => {
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -126,6 +126,22 @@ const Register = () => {
                 required
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
+                className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+            
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Phone className="h-5 w-5 text-indigo-500" />
+              </div>
+              <motion.input 
+                whileFocus={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                placeholder="Phone Number" 
+                type="tel" 
+                required
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
