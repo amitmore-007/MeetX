@@ -3,17 +3,20 @@ import { useState } from 'react';
 import API from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(''); // Clear any previous errors
+    
     try {
       const res = await API.post('/auth/login', form);
       localStorage.setItem('token', res.data.token);
@@ -24,7 +27,25 @@ const Login = () => {
       }, 800);
     } catch (error) {
       setIsLoading(false);
-      // You can add error handling here
+      
+      // Handle different error scenarios
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        if (error.response.status === 401) {
+          setError('Invalid email or password. Please try again.');
+        } else if (error.response.data && error.response.data.message) {
+          setError(error.response.data.message);
+        } else {
+          setError('Login failed. Please check your credentials and try again.');
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        setError('No response from server. Please check your internet connection.');
+      } else {
+        // Something happened in setting up the request
+        setError('An error occurred. Please try again later.');
+      }
     }
   };
 
@@ -53,6 +74,17 @@ const Login = () => {
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Welcome back</h2>
           <p className="mt-2 text-sm text-gray-600">Sign in to your account</p>
         </div>
+        
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-3 rounded-lg bg-red-50 border border-red-200 flex items-start"
+          >
+            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
+            <p className="text-sm text-red-600">{error}</p>
+          </motion.div>
+        )}
         
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="space-y-4">

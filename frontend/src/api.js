@@ -1,8 +1,8 @@
-// src/api.js
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api', // Change if hosted
+  // Replace the base URL with your deployed backend URL
+  baseURL: 'https://activity-backend-ghgw.onrender.com/api', // Updated URL
 });
 
 API.interceptors.request.use((req) => {
