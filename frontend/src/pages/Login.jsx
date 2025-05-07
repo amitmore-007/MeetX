@@ -2,14 +2,15 @@
 import { useState } from 'react';
 import API from '../api';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, Lock, ArrowRight, Eye, EyeOff, AlertCircle, CheckCircle, X } from 'lucide-react';
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -21,10 +22,14 @@ const Login = () => {
       const res = await API.post('/auth/login', form);
       localStorage.setItem('token', res.data.token);
       
-      // Add success animation before navigating
+      // Show success modal
+      setIsLoading(false);
+      setShowSuccessModal(true);
+      
+      // Navigate after modal is shown for a short time
       setTimeout(() => {
         navigate('/dashboard');
-      }, 800);
+      }, 2000);
     } catch (error) {
       setIsLoading(false);
       
@@ -51,6 +56,11 @@ const Login = () => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+  
+  const closeSuccessModal = () => {
+    setShowSuccessModal(false);
+    navigate('/dashboard');
   };
 
   return (
@@ -174,6 +184,84 @@ const Login = () => {
           </p>
         </div>
       </motion.div>
+      
+      {/* Success Modal */}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 15 }}
+              className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden"
+            >
+              <div className="relative">
+                {/* Success background gradient - blue theme for login */}
+                <div className="h-28 bg-gradient-to-r from-blue-400 to-indigo-500" />
+                
+                {/* Close button */}
+                <button 
+                  onClick={closeSuccessModal}
+                  className="absolute top-4 right-4 text-white bg-white bg-opacity-20 rounded-full p-1 hover:bg-opacity-30 transition-all focus:outline-none"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+                
+                {/* Success icon */}
+                <motion.div 
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", damping: 10, delay: 0.2 }}
+                  className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-white rounded-full p-2"
+                >
+                  <div className="bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full p-4">
+                    <CheckCircle className="h-10 w-10 text-white" />
+                  </div>
+                </motion.div>
+              </div>
+              
+              <div className="pt-16 px-8 pb-8 text-center">
+                <motion.h3 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-2xl font-bold text-gray-800"
+                >
+                  Login Successful!
+                </motion.h3>
+                
+                <motion.p 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="mt-4 text-gray-600"
+                >
+                  Welcome back! You're being redirected to your dashboard.
+                </motion.p>
+                
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="mt-6 flex items-center justify-center"
+                >
+                  <svg className="animate-spin h-5 w-5 text-indigo-500 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span className="text-sm text-indigo-600">Redirecting...</span>
+                </motion.div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
