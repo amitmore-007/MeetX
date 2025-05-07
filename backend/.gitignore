@@ -1,0 +1,34 @@
+# Node.js
+node_modules/
+.env
+*.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+frontend/node_modules/
+backend/node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Build output
+dist/
+build/
+
+# React
+frontend/build/
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# OS-specific
+.DS_Store
+Thumbs.db
