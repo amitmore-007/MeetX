@@ -1,5 +1,7 @@
 const Booking = require('../models/bookingModel');
 const Activity = require('../models/activityModel');
+const User = require('../models/userModel');
+
 
 const bookActivity = async (req, res) => {
   const booking = await Booking.create({
@@ -7,6 +9,38 @@ const bookActivity = async (req, res) => {
     activity: req.body.activityId
   });
   res.status(201).json(booking);
+};
+
+const bookGroupActivity = async (req, res) => {
+  try {
+    const { activityId, userIds, groupName } = req.body;
+
+    // Validate activity
+    const activity = await Activity.findById(activityId);
+    if (!activity) return res.status(404).json({ message: 'Activity not found' });
+
+    // Validate user IDs
+    const users = await User.find({ _id: { $in: userIds } });
+    if (users.length !== userIds.length) return res.status(400).json({ message: 'One or more users not found' });
+
+    // Prevent duplicate bookings
+    const existingBooking = await Booking.findOne({ activity: activityId, users: { $in: userIds } });
+    if (existingBooking) return res.status(400).json({ message: 'Some users already booked this activity' });
+
+    const booking = new Booking({
+      users: userIds,
+      activity: activityId,
+      groupName: groupName || null
+    });
+
+    await booking.save();
+
+    res.status(201).json({ message: 'Group booking successful', booking });
+
+  } catch (error) {
+    console.error('Group Booking Error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 
@@ -56,5 +90,6 @@ const cancelBooking = async (req, res) => {
   module.exports = {
     bookActivity,
     getMyBookings,
-    cancelBooking
+    cancelBooking,
+    bookGroupActivity
   };

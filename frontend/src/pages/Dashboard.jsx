@@ -2,20 +2,16 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Calendar, 
-  LogOut, 
-  Clock, 
-  User, 
-  Bookmark, 
   Activity, 
-  X, 
-  Check, 
-  Plus,
+  LogOut, 
   Bell,
-  MapPin,
+  Bookmark,
+  Check
 } from 'lucide-react';
 import API from '../api';
-import { formatDistanceToNow } from 'date-fns';
+import ActivitiesList from './ActivitiesList';
+import BookingsList from './BookingsList';
+import BookingModal from './BookingModal';
 
 export default function Dashboard() {
   const [activities, setActivities] = useState([]);
@@ -118,29 +114,6 @@ export default function Dashboard() {
       }
     }
   }, [activeTab, navigate]);
-
-  // Format date to readable format
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  // Extract date and time components
-  const getDateParts = (dateString) => {
-    if (!dateString) return { day: '--', month: '--', time: '--:--' };
-    
-    const date = new Date(dateString);
-    return {
-      day: date.getDate(),
-      month: date.toLocaleString('en-US', { month: 'short' }),
-      time: date.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit' })
-    };
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100">
@@ -264,205 +237,28 @@ export default function Dashboard() {
         {/* Tab Content */}
         <AnimatePresence mode="wait">
           {activeTab === 'activities' && !loading && (
-            <motion.div
-              key="activities"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {filteredActivities.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-                  <motion.div 
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    className="mb-4 text-gray-400"
-                  >
-                    <Calendar size={48} className="mx-auto" />
-                  </motion.div>
-                  <h3 className="text-lg font-medium text-gray-700">No activities available</h3>
-                  <p className="text-gray-500 mt-2">Check back later for new activities</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredActivities.map((activity, index) => {
-                    const dateParts = getDateParts(activity.date);
-                    return (
-                      <motion.div
-                        key={activity._id || index}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        whileHover={{ y: -5, boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}
-                        className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
-                      >
-                        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 text-white">
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center space-x-2">
-                              <Calendar size={20} />
-                              <span className="font-medium">{dateParts.month} {dateParts.day}</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Clock size={20} />
-                              <span>{dateParts.time}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-5">
-                          <h3 className="text-xl font-bold text-gray-800 mb-2">{activity.title}</h3>
-                          <p className="text-gray-600 mb-4">{activity.description}</p>
-                          {activity.location && (
-                            <div className="flex items-center space-x-2 mb-4 text-gray-600">
-                              <MapPin size={16} className="text-blue-500" />
-                              <span>{activity.location}</span>
-                            </div>
-                          )}
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleOpenBookingModal(activity)}
-                            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2"
-                          >
-                            <Plus size={18} />
-                            <span>Book Now</span>
-                          </motion.button>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-            </motion.div>
+            <ActivitiesList 
+              activities={filteredActivities} 
+              onBookActivity={handleOpenBookingModal} 
+            />
           )}
 
           {activeTab === 'bookings' && !loading && (
-            <motion.div
-              key="bookings"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {bookings.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-                  <motion.div 
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    className="mb-4 text-gray-400"
-                  >
-                    <Bookmark size={48} className="mx-auto" />
-                  </motion.div>
-                  <h3 className="text-lg font-medium text-gray-700">No bookings made yet</h3>
-                  <p className="text-gray-500 mt-2">Browse activities and book something exciting</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {bookings.map((booking, index) => {
-                    // Check if booking.activity exists before accessing its properties
-                    if (!booking || !booking.activity) {
-                      return null; // Skip rendering this booking
-                    }
-                    
-                    return (
-                      <motion.div
-                        key={booking._id || index}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
-                      >
-                        <div className="flex flex-col md:flex-row md:items-center">
-                          <div className="bg-gradient-to-r from-green-500 to-teal-600 p-4 text-white md:w-32 md:h-32 flex flex-col items-center justify-center">
-                            <span className="text-2xl font-bold">{getDateParts(booking.activity.date).day}</span>
-                            <span className="text-sm uppercase">{getDateParts(booking.activity.date).month}</span>
-                            <span className="text-xs mt-2">{getDateParts(booking.activity.date).time}</span>
-                          </div>
-                          <div className="p-5 flex-grow">
-                            <h3 className="text-xl font-bold text-gray-800 mb-2">{booking.activity.title}</h3>
-                            <p className="text-gray-600">{booking.activity.description}</p>
-                            {booking.activity.location && (
-                              <div className="flex items-center space-x-2 text-gray-600">
-                                <MapPin size={16} className="text-green-500" />
-                                <span>{booking.activity.location}</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="p-5 flex justify-end">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => cancelBooking(booking._id)}
-                              className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-all duration-300 flex items-center space-x-2"
-                            >
-                              <X size={18} />
-                              <span>Cancel</span>
-                            </motion.button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-            </motion.div>
+            <BookingsList 
+              bookings={bookings} 
+              onCancelBooking={cancelBooking} 
+            />
           )}
         </AnimatePresence>
       </div>
 
-      {/* Booking Confirmation Modal */}
-      <AnimatePresence>
-        {showBookingModal && selectedActivity && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden"
-            >
-              <div className="bg-blue-600 p-4 text-white">
-                <h3 className="text-lg font-bold">Confirm Booking</h3>
-              </div>
-              <div className="p-6">
-                <p className="text-gray-600 mb-4">Are you sure you want to book:</p>
-                <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                  <h4 className="text-lg font-bold text-gray-800">{selectedActivity.title}</h4>
-                  <p className="text-gray-600 text-sm">{formatDate(selectedActivity.date)}</p>
-                  {selectedActivity.location && (
-                    <div className="flex items-center space-x-2 text-gray-600 text-sm">
-                      <MapPin size={14} className="text-blue-500" />
-                      <span>{selectedActivity.location}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-end space-x-3">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowBookingModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300"
-                  >
-                    Cancel
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => bookActivity(selectedActivity._id)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 flex items-center space-x-2"
-                  >
-                    <Check size={18} />
-                    <span>Confirm</span>
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Booking Modal */}
+      <BookingModal 
+        isOpen={showBookingModal}
+        activity={selectedActivity}
+        onClose={() => setShowBookingModal(false)}
+        onConfirm={() => selectedActivity && bookActivity(selectedActivity._id)}
+      />
 
       {/* Notification Toast */}
       <AnimatePresence>
