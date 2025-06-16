@@ -6,7 +6,8 @@ import {
   LogOut, 
   Bell,
   Bookmark,
-  Check
+  Check,
+  XCircle
 } from 'lucide-react';
 import API from '../api';
 import ActivitiesList from './ActivitiesList';
@@ -274,7 +275,7 @@ export default function Dashboard() {
             {notification.type === 'success' ? (
               <Check size={18} />
             ) : (
-              <X size={18} />
+              <XCircle size={18} />
             )}
             <span>{notification.message}</span>
           </motion.div>
