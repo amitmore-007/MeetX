@@ -1,9 +1,24 @@
 const express = require('express');
-const { listActivities, seedActivities } = require('../controllers/activityController');
+const { 
+  listActivities, 
+  getActivityById,
+  createActivity,
+  updateActivity,
+  getPublisherActivities,
+  seedActivities 
+} = require('../controllers/activityController');
+const auth = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
+// Public routes
 router.get('/', listActivities);
-router.post('/seed', seedActivities); // 👈 temp route to add dummy data
+router.get('/:id', getActivityById);
+router.post('/seed', seedActivities);
+
+// Protected routes
+router.post('/', auth, createActivity);
+router.put('/:id', auth, updateActivity);
+router.get('/publisher/my-activities', auth, getPublisherActivities);
 
 module.exports = router;

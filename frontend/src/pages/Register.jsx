@@ -30,9 +30,11 @@ const Register = () => {
       const { confirmPassword, ...registerData } = form;
       const res = await API.post('/auth/register', registerData);
       
-      // Show success modal
+      
       setShowSuccessModal(true);
       setIsLoading(false);
+      navigate('/login');
+
       
     } catch (error) {
       setIsLoading(false);
